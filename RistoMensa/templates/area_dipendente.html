@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistema Prenotazione Mensa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #fff;
+        }
+        .navbar {
+            background-color: #b71c1c;
+        }
+        .card {
+            background-color: #1e1e1e;
+            border: none;
+        }
+        .btn-primary {
+            background-color: #d32f2f;
+            border-color: #d32f2f;
+        }
+        .btn-primary:hover {
+            background-color: #b71c1c;
+            border-color: #b71c1c;
+        }
+        .table thead th {
+            color: #ccc;
+        }
+        .table tbody tr {
+            color: #fff;
+        }
+        .badge-primary {
+            background-color: #1976d2;
+        }
+        .badge-success {
+            background-color: #388e3c;
+        }
+        .badge-danger {
+            background-color: #c62828;
+        }
+        .page-item .page-link {
+            background-color: #1e1e1e;
+            color: #fff;
+            border-color: #444;
+        }
+        .page-item.active .page-link {
+            background-color: #d32f2f;
+            border-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark px-3">
+        <span class="navbar-brand mb-0 h1">Sistema Prenotazione Mensa</span>
+        <div class="text-end text-white">
+            <strong>{{ nome }}</strong><br>
+            {{ ruolo }}<br>
+            {{ nome_azienda }}
+        </div>
+    </nav>
+<form method="post" action="/prenotazione" class="d-flex justify-content-end p-3">
+        {% csrf_token %}  
+    <div class="container my-4">
+        <div class="card p-4 mb-4">
+            <h2 class="text-danger">Benvenuto, {{ nome }}</h2>
+            <p>Da qui puoi gestire le tue prenotazioni per il servizio mensa aziendale.</p>
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary">Nuova Prenotazione</button>
+            </div>
+        </div>
+    </form>
+
+        <h3 class="text-danger mb-3">Storico Prenotazioni</h3>
+        <div class="card p-4">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">Periodo:</label>
+                    <select class="form-select">
+                        <option>Mese corrente</option>
+                        <option>Mese precedente</option>
+                        <option>Ultimi 3 mesi</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Stato:</label>
+                    <select class="form-select">
+                        <option>Tutti</option>
+                        <option>In programma</option>
+                        <option>Completata</option>
+                        <option>Cancellata</option>
+                    </select>
+                </div>
+            </div>
+
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Tavolo</th>
+                        <th>Ordine</th>
+                        <th>Totale</th>
+                        <th>Stato</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>14/11/2023</td>
+                        <td>Tavolo 5</td>
+                        <td>Pasta al pomodoro, Pollo arrosto</td>
+                        <td>€13.00</td>
+                        <td><span class="badge badge-primary">In programma</span></td>
+                        <td>
+                            <button class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>13/11/2023</td>
+                        <td>Tavolo 8</td>
+                        <td>Risotto ai funghi, Filetto di merluzzo, Tiramisù</td>
+                        <td>€19.00</td>
+                        <td><span class="badge badge-success">Completata</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"><i class="bi bi-eye"></i></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10/11/2023</td>
+                        <td>Tavolo 12</td>
+                        <td>Pasta al pomodoro, Insalata mista</td>
+                        <td>€9.00</td>
+                        <td><span class="badge badge-success">Completata</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"><i class="bi bi-eye"></i></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>09/11/2023</td>
+                        <td>Tavolo 3</td>
+                        <td>Risotto ai funghi, Pollo arrosto, Frutta fresca</td>
+                        <td>€17.00</td>
+                        <td><span class="badge badge-success">Completata</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"><i class="bi bi-eye"></i></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>08/11/2023</td>
+                        <td>Tavolo 7</td>
+                        <td>Pasta al pomodoro, Filetto di merluzzo</td>
+                        <td>€14.00</td>
+                        <td><span class="badge badge-danger">Cancellata</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm"><i class="bi bi-eye"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="page-link" href="#">&laquo;</a>
+                    </li>
+                    <li class="page-item active">
+                        <a class="page-link" href="#">1</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">2</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">3</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Icone Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</body>
+</html>
