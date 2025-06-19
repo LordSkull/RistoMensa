@@ -2,7 +2,8 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.urls import reverse
 from mensa.models import *
-from datetime import date
+from datetime import date, datetime
+from django.core.paginator import Paginator
 import hashlib
 # Create your views here.
 
@@ -11,9 +12,6 @@ def index(request):
 
 def authenticated(email, password):
     return Dipendente.objects.filter(email=email,password=password).exists()
-    #select * from User where email="dsfjnfdsjsndfj" and password="password"
-
-
 
 def login(request):
 
@@ -23,17 +21,13 @@ def login(request):
         ruolo = request.POST.get('Ruolo')
 
         profilo = None
+        struttura_id = None
         
         if ruolo == 'Dipendente':
             try:
                 profilo = Dipendente.objects.get(email=email)
-                nome_dipendente = profilo.nome
-                azienda_dipendente = profilo.id_azienda.ragione_sociale
                 struttura_id = profilo.id_azienda.id_struttura.id_struttura
-                
-                pagina = 'area_dipendente.html'
-                specifiche = {'nome': nome_dipendente, 'nome_azienda': azienda_dipendente, 'ruolo': ruolo}
-            
+    
             except Dipendente.DoesNotExist:
                 messages.error(request, "Nessun dipendente con questa email.")
                 return render(request, 'home.html')
@@ -42,12 +36,9 @@ def login(request):
             try:
                 profilo = Responsabile.objects.get(email=email)
                 azienda_gestore = profilo.id_struttura.nome
-                # per il responsabile prendi id_struttura direttamente
+                # per il responsabile prendo l'id_struttura direttamente
                 struttura_id = profilo.id_struttura.id_struttura
-            
-                pagina = 'area_gestore.html'
-                specifiche = {'nome': profilo.email, 'nome_azienda': azienda_gestore, 'ruolo': ruolo}
-            
+             
             except Responsabile.DoesNotExist:
                 messages.error(request, "Nessun gestore mensa con questa email.")
                 
@@ -64,7 +55,7 @@ def login(request):
                 if ruolo == 'Gestore':
                     return redirect('gestione_menu')
                 else:
-                    return render(request, pagina, specifiche)
+                    return redirect('area_dipendente')
             else:
                 messages.error(request, "Password errata.")
 
@@ -73,25 +64,69 @@ def annulla(request):
    return render(request, 'area_dipendente.html')
 
 
+def area_dipendente(request):
+    # Recupera il dipendente loggato dalla sessione
+    email = request.session.get('user_email')
+    dipendente = get_object_or_404(Dipendente, email=email)
+
+    # Filtro dal GET
+    periodo = request.GET.get('periodo', 'mese_corrente')
+    stato = request.GET.get('stato', 'Tutti')
+
+    prenotazioni = Prenotazione.objects.filter(id_dipendente=dipendente).order_by('-data_prenotazione')
+
+    # Filtro periodo
+    today = datetime.today().date()
+    if periodo == "mese_corrente":
+        prenotazioni = prenotazioni.filter(data_prenotazione__month=today.month, data_prenotazione__year=today.year)
+    elif periodo == "mese_precedente":
+        last_month = today.month - 1 or 12
+        year = today.year if today.month > 1 else today.year - 1
+        prenotazioni = prenotazioni.filter(data_prenotazione__month=last_month, data_prenotazione__year=year)
+    elif periodo == "ultimi_3_mesi":
+        from datetime import timedelta
+        three_months_ago = today - timedelta(days=90)
+        prenotazioni = prenotazioni.filter(data_prenotazione__date__gte=three_months_ago)
+
+    # Filtro stato
+    if stato and stato != "Tutti":
+        prenotazioni = prenotazioni.filter(stato=stato)
+
+    # Paginazione (10 prenotazioni per pagina)
+    paginator = Paginator(prenotazioni, 10)  # 10 prenotazioni per pagina
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'nome': dipendente.nome,
+        'cognome': dipendente.cognome,
+        'nome_azienda': dipendente.id_azienda.ragione_sociale,
+        'ruolo': 'Dipendente',
+        'prenotazioni': page_obj,
+        'periodo': periodo,
+        'stato': stato,
+    }
+    return render(request, 'area_dipendente.html', context)
+
+
 def effettua_prenotazione(request):
-    # 1) recupera dalla sessione l’ID della struttura
+    #  recupero dalla sessione l’ID della struttura
     struct_id = request.session.get('id_struttura')
     if not struct_id:
         return redirect('login')
 
-   
-    # 3) prendo i tavoli DI QUELLA struttura
+    #  prendo i tavoli DI QUELLA struttura
     tavoli = Tavolo.objects.filter(struttura_associata=struct_id,disponibilità=True).order_by('id_tavolo')
 
-    # 4) prendo i piatti associati al responsabile di quella stessa struttura
+    # prendo i piatti associati al responsabile di quella stessa struttura
     piatti = Piatto.objects.filter(id_responsabile__id_struttura=struct_id)
 
-    # 5) suddivido per tipo di piatto
+    # suddivido per tipo di piatto
     primi    = piatti.filter(tipo_piatto=Piatto.Tipologia_piatto.PRIMO)
     secondi = piatti.filter(tipo_piatto=Piatto.Tipologia_piatto.SECONDO)
     dessert  = piatti.filter(tipo_piatto=Piatto.Tipologia_piatto.DESSERT)
 
-    # 6) altrimenti mostra il form
+    # altrimenti mostriamo un po' il form
     return render(request, 'prenotazione.html', {
         'tavoli':   tavoli,
         'primi':    primi,
@@ -122,68 +157,53 @@ def conferma_prenotazione(request):
         email = request.session.get('user_email')
         dipendente = get_object_or_404(Dipendente, email=email)
 
-        # 1. Salva la prenotazione
+        # Questa salva la prenotazione
         prenotazione = Prenotazione.objects.create(
             data_prenotazione=data,
             totale_prezzo=totale,
-            stato=Prenotazione.StatoPrenotazione.IN_ATTESA,  # puoi anche mettere CONFERMATA se vuoi
+            stato=Prenotazione.StatoPrenotazione.IN_ATTESA, 
             id_tavolo=tavolo,
             id_dipendente=dipendente
         )
         
-        # 2. Salva le associazioni tavolo-piatto (puoi aggiungere anche prenotazione_id se vuoi espandere il modello)
+        #  e qua salvo l'associazione tavolo-piatto 
         Associazione.objects.create(id_tavolo=tavolo, id_piatto=primo)
         Associazione.objects.create(id_tavolo=tavolo, id_piatto=secondo)
         Associazione.objects.create(id_tavolo=tavolo, id_piatto=dessert)
 
         # Torna la pagina di conferma
-        return render(request, 'conferma_prenotazione.html', {
-            'data': data,
-            'tavolo': tavolo,
-            'primo_scelto': primo,
-            'secondo_scelto': secondo,
-            'dessert_scelto': dessert,
-            'totale': totale,
-            'prenotazione_id': prenotazione.id_prenotazione,
-        })
+        return redirect('area_dipendente')
 
-'''
-def conferma_prenotazione(request):
+
+def elimina_prenotazione(request, id):
     if request.method == 'POST':
-        # 1) recupero i dati dal form
-        data = request.POST.get('data')
-        id_tavolo = request.POST.get('tavolo')
-        id_primo = request.POST.get('primo')
-        id_secondo = request.POST.get('secondo')
-        id_dessert = request.POST.get('dessert')
+        prenotazione = get_object_or_404(Prenotazione, id_prenotazione=id)
+        # Verifica che sia il proprietario
+        if prenotazione.id_dipendente.email == request.session.get('user_email'):
+            prenotazione.delete()
+            messages.success(request, "Prenotazione eliminata con successo.")
+        else:
+            messages.error(request, "Non puoi eliminare questa prenotazione.")
+    return redirect('area_dipendente')
 
-        # 2) recupero il tavolo
-        tavolo = get_object_or_404(Tavolo, id_tavolo=id_tavolo)
-
-        # 3) recupero i piatti selezionati
-        primo = get_object_or_404(Piatto, id_piatto=id_primo)
-        secondo = get_object_or_404(Piatto, id_piatto=id_secondo)
-        dessert = get_object_or_404(Piatto, id_piatto=id_dessert)
-
-        # 4) calcolo il totale
-        totale = primo.prezzo + secondo.prezzo + dessert.prezzo
-
-        # 5) reindirizzo alla pagina di conferma
-        return render(request, 'conferma_prenotazione.html', {
-            'data': data,
-            'tavolo': tavolo,
-            'primo_scelto': primo,
-            'secondo_scelto': secondo,
-            'dessert_scelto': dessert,
-            'totale': totale
-        })
-'''
 
 def gestione_menu(request):
-    # Recupera la struttura dal responsabile loggato (puoi anche prenderla dalla sessione)
+    # Recupera la struttura dal responsabile loggato 
     id_struttura = request.session.get('id_struttura')
     responsabile = Responsabile.objects.get(id_struttura=id_struttura)
     
+
+    #----AGGIORNA STATO PRENOTAZIONE----
+    if request.method == 'POST' and 'update_stato' in request.POST:
+        prenotazione_id = request.POST['prenotazione_id']
+        nuovo_stato = request.POST['nuovo_stato']
+        pren = Prenotazione.objects.get(id_prenotazione=prenotazione_id)
+        pren.stato = nuovo_stato
+        pren.save()
+        return redirect('gestione_menu')
+
+    #----GESTIONE PIATTI NEL MENU----
+
     # Aggiunta piatto
     if request.method == 'POST' and 'add_piatto' in request.POST:
         nome = request.POST['nome']
@@ -205,6 +225,25 @@ def gestione_menu(request):
         piatto.delete()
         return redirect('gestione_menu')
 
+    #----GESTIONE PRENOTAZIONI----
+    
+    data_filtro = request.GET.get('data', '')  # formato 'YYYY-MM-DD'
+    stato_filtro = request.GET.get('stato', '')
+
+    prenotazioni = Prenotazione.objects.filter(id_tavolo__struttura_associata=id_struttura).select_related('id_tavolo', 'id_dipendente')
+
+    # Filtra per data se specificata
+    if data_filtro:
+        try:
+            data_obj = datetime.strptime(data_filtro, '%Y-%m-%d').date()
+            prenotazioni = prenotazioni.filter(data_prenotazione__date=data_obj)
+        except ValueError:
+            pass
+
+    # Filtra per stato se specificato
+    if stato_filtro:
+        prenotazioni = prenotazioni.filter(stato=stato_filtro)
+
     # Piatti di quella mensa
     piatti = Piatto.objects.filter(id_responsabile=responsabile)
     primi = piatti.filter(tipo_piatto='primo piatto')
@@ -215,6 +254,9 @@ def gestione_menu(request):
         'primi': primi,
         'secondi': secondi,
         'dessert': dessert,
+        'prenotazioni': prenotazioni.order_by('-data_prenotazione'),
+        'data_filtro': data_filtro,
+        'stato_filtro': stato_filtro,
         'nome' : responsabile.email,
         'ruolo': 'Gestore',
         'nome_azienda': responsabile.id_struttura.nome,

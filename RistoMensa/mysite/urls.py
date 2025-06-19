@@ -22,9 +22,10 @@ urlpatterns = [
     path('', index, name='home'),
     path('login', login, name='login'),
     path('prenotazione', effettua_prenotazione, name='prenotazione'),
-    path('area_dipendente', annulla, name='annulla'),
+    path('area_dipendente/', area_dipendente, name='area_dipendente'),
     path('next', conferma_prenotazione, name='conferma_prenotazione'),
     path('gestione_menu/', gestione_menu, name='gestione_menu'),
+    path('elimina_prenotazione/<int:id>/', elimina_prenotazione, name='elimina_prenotazione'),
     path('home/', index, name='home'),
 ]
 

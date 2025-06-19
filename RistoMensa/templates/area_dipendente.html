@@ -56,7 +56,7 @@
     <nav class="navbar navbar-dark px-3">
         <span class="navbar-brand mb-0 h1">Sistema Prenotazione Mensa</span>
         <div class="text-end text-white">
-            <strong>{{ nome }}</strong><br>
+            <strong>{{ nome }} {{ cognome }}</strong><br>
             {{ ruolo }}<br>
             {{ nome_azienda }}
         </div>
@@ -73,111 +73,100 @@
         </div>
     </form>
 
-        <h3 class="text-danger mb-3">Storico Prenotazioni</h3>
-        <div class="card p-4">
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label class="form-label">Periodo:</label>
-                    <select class="form-select">
-                        <option>Mese corrente</option>
-                        <option>Mese precedente</option>
-                        <option>Ultimi 3 mesi</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Stato:</label>
-                    <select class="form-select">
-                        <option>Tutti</option>
-                        <option>In programma</option>
-                        <option>Completata</option>
-                        <option>Cancellata</option>
-                    </select>
-                </div>
+<div class="container">
+    <h3 class="text-danger mb-3">Storico Prenotazioni</h3>
+    <div class="card p-4">
+
+        <!-- Filtri attivi -->
+        <form method="get" class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Periodo:</label>
+                <select class="form-select" name="periodo" onchange="this.form.submit()">
+                    <option value="mese_corrente" {% if periodo == 'mese_corrente' %}selected{% endif %}>Mese corrente</option>
+                    <option value="mese_precedente" {% if periodo == 'mese_precedente' %}selected{% endif %}>Mese precedente</option>
+                    <option value="ultimi_3_mesi" {% if periodo == 'ultimi_3_mesi' %}selected{% endif %}>Ultimi 3 mesi</option>
+                </select>
             </div>
+            <div class="col-md-3">
+                <label class="form-label">Stato:</label>
+                <select class="form-select" name="stato" onchange="this.form.submit()">
+                    <option value="Tutti" {% if stato == 'Tutti' %}selected{% endif %}>Tutti</option>
+                    <option value="in attesa" {% if stato == 'in attesa' %}selected{% endif %}>In attesa</option>
+                    <option value="confermata" {% if stato == 'confermata' %}selected{% endif %}>Confermata</option>
+                    <option value="annullata" {% if stato == 'annullata' %}selected{% endif %}>Annullata</option>
+                </select>
+            </div>
+        </form>
 
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Tavolo</th>
-                        <th>Ordine</th>
-                        <th>Totale</th>
-                        <th>Stato</th>
-                        <th>Azioni</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>14/11/2023</td>
-                        <td>Tavolo 5</td>
-                        <td>Pasta al pomodoro, Pollo arrosto</td>
-                        <td>€13.00</td>
-                        <td><span class="badge badge-primary">In programma</span></td>
-                        <td>
-                            <button class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i></button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>13/11/2023</td>
-                        <td>Tavolo 8</td>
-                        <td>Risotto ai funghi, Filetto di merluzzo, Tiramisù</td>
-                        <td>€19.00</td>
-                        <td><span class="badge badge-success">Completata</span></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>10/11/2023</td>
-                        <td>Tavolo 12</td>
-                        <td>Pasta al pomodoro, Insalata mista</td>
-                        <td>€9.00</td>
-                        <td><span class="badge badge-success">Completata</span></td>
-                        <td> </td>
-                    </tr>
-                    <tr>
-                        <td>09/11/2023</td>
-                        <td>Tavolo 3</td>
-                        <td>Risotto ai funghi, Pollo arrosto, Frutta fresca</td>
-                        <td>€17.00</td>
-                        <td><span class="badge badge-success">Completata</span></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>08/11/2023</td>
-                        <td>Tavolo 7</td>
-                        <td>Pasta al pomodoro, Filetto di merluzzo</td>
-                        <td>€14.00</td>
-                        <td><span class="badge badge-danger">Cancellata</span></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <nav>
-                <ul class="pagination justify-content-center">
-                    <li class="page-item">
-                        <a class="page-link" href="#">&laquo;</a>
-                    </li>
-                    <li class="page-item active">
-                        <a class="page-link" href="#">1</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">2</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">3</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">&raquo;</a>
-                    </li>
-                </ul>
-            </nav>
-
-        </div>
+        <!-- Tabella storico -->
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Tavolo</th>
+                    <th>Totale</th>
+                    <th>Stato</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pren in prenotazioni %}
+                <tr>
+                    <td>{{ pren.data_prenotazione|date:"d/m/Y" }}</td>
+                    <td>Tavolo {{ pren.id_tavolo.id_tavolo }}</td>
+                    <td>€{{ pren.totale_prezzo|floatformat:2 }}</td>
+                    <td>
+                        {% if pren.stato == 'in attesa' %}
+                            <span class="badge badge-attesa">In attesa</span>
+                        {% elif pren.stato == 'confermata' %}
+                            <span class="badge badge-confermata">Confermata</span>
+                        {% elif pren.stato == 'annullata' %}
+                            <span class="badge badge-annullata">Annullata</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if pren.stato == 'in attesa' %}
+                            <form method="post" action="{% url 'elimina_prenotazione' pren.id_prenotazione %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm" title="Annulla" onclick="return confirm('Vuoi davvero eliminare questa prenotazione?');">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">Nessuna prenotazione trovata.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <!-- Paginazione -->
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if prenotazioni.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ prenotazioni.previous_page_number }}&periodo={{ periodo }}&stato={{ stato }}">&laquo;</a>
+                </li>
+                {% endif %}
+                {% for i in prenotazioni.paginator.page_range %}
+                <li class="page-item {% if prenotazioni.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}&periodo={{ periodo }}&stato={{ stato }}">{{ i }}</a>
+                </li>
+                {% endfor %}
+                {% if prenotazioni.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ prenotazioni.next_page_number }}&periodo={{ periodo }}&stato={{ stato }}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Icone Bootstrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<button type="button" class="btn btn-secondary mt-4" onclick="window.location.href='/home'">Torna alla Home
+</button>
 </body>
 </html>
