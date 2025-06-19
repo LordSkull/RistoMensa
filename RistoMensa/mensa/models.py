@@ -37,7 +37,7 @@ class Responsabile(models.Model):
     id_struttura = models.ForeignKey(Struttura, on_delete=models.CASCADE, related_name='responsabile')
 
 class Piatto(models.Model):
-    id_piatto = models.IntegerField(primary_key=True)
+    id_piatto = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=80)
     descrizione = models.CharField(max_length=255, null=True)
     prezzo = models.DecimalField(max_digits=10, decimal_places=2)
@@ -50,19 +50,22 @@ class Piatto(models.Model):
     tipo_piatto = EnumField(choices=Tipologia_piatto.choices)
     id_responsabile = models.ForeignKey(Responsabile, on_delete=models.CASCADE, related_name='piatto')
 
+
 class Tavolo(models.Model):
     id_tavolo = models.IntegerField(primary_key=True)
     numero_posti_disponibili = models.IntegerField()
     disponibilità = models.BooleanField(default=True)
+    struttura_associata = models.ForeignKey(Struttura,on_delete=models.CASCADE,related_name='tavolo')
 
 class Prenotazione(models.Model):
-    id_prenotazione = models.IntegerField(primary_key=True)
+    id_prenotazione = models.AutoField(primary_key=True)
     data_prenotazione = models.DateTimeField()
-
+   # descrizione_ordine = models.TextField(max_length=255, null=True, blank=True)
     class StatoPrenotazione(models.TextChoices):
         IN_ATTESA = 'in attesa',
         ANNULLATA = 'annullata',
         CONFERMATA = 'confermata',
+    
     
     stato = EnumField(choices=StatoPrenotazione.choices, default=StatoPrenotazione.IN_ATTESA)
     totale_prezzo = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)

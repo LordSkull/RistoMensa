@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistema Prenotazione Mensa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar { background-color: #b71c1c; }
+    </style>
+</head>
+<body>
+{% load static %}
+{% block content %}
+<nav class="navbar navbar-dark px-3">
+    <span class="navbar-brand mb-0 h1">Sistema Gestione Piatti Mensa</span>
+    <div class="text-end text-white">
+        <strong>{{ nome }}</strong><br>
+        {{ ruolo }}<br>
+        {{ nome_azienda }}
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h2 class="text-danger mb-4">Gestione Menu Mensa</h2>
+
+    <!-- PRIMI PIATTI -->
+    <div class="mb-5">
+        <h4 class="text-danger">Primi Piatti</h4>
+        <ul class="list-group mb-2">
+            {% for piatto in primi %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ piatto.nome }}</span>
+                <span>
+                    € {{ piatto.prezzo|floatformat:2 }}
+                   <!-- Form per eliminare il piatto -->
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="delete_piatto" value="{{ piatto.id_piatto }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Elimina">×</button>
+                </form>
+            </span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">Nessun primo piatto inserito.</li>
+            {% endfor %}
+        </ul>
+        <!-- Form aggiunta primo piatto -->
+        <form method="post" class="form-inline">
+            {% csrf_token %}
+             <input type="hidden" name="add_piatto" value="1">
+            <input type="hidden" name="tipo_piatto" value="primo piatto">
+            <input type="text" name="nome" class="form-control mr-2 mb-2" placeholder="Nome primo piatto" required>
+            <input type="number" step="0.01" min="0" name="prezzo" class="form-control mr-2 mb-2" placeholder="Prezzo (€)" required>
+            <button type="submit" class="btn btn-danger mb-2">Aggiungi Primo Piatto</button>
+        </form>
+    </div>
+
+    <!-- SECONDI PIATTI -->
+    <div class="mb-5">
+        <h4 class="text-danger">Secondi Piatti</h4>
+        <ul class="list-group mb-2">
+            {% for piatto in secondi %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ piatto.nome }}</span>
+                <span>
+                    € {{ piatto.prezzo|floatformat:2 }}
+                    <!-- Form per eliminare il piatto -->
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="delete_piatto" value="{{ piatto.id_piatto }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Elimina">×</button>
+                </form>
+            </span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">Nessun secondo piatto inserito.</li>
+            {% endfor %}
+        </ul>
+        <!-- Form aggiunta secondo piatto -->
+        <form method="post" class="form-inline">
+            {% csrf_token %}
+            <input type="hidden" name="add_piatto" value="1">
+            <input type="hidden" name="tipo_piatto" value="secondo piatto">
+            <input type="text" name="nome" class="form-control mr-2 mb-2" placeholder="Nome secondo piatto" required>
+            <input type="number" step="0.01" min="0" name="prezzo" class="form-control mr-2 mb-2" placeholder="Prezzo (€)" required>
+            <button type="submit" class="btn btn-danger mb-2">Aggiungi Secondo Piatto</button>
+        </form>
+    </div>
+
+    <!-- DESSERT -->
+    <div class="mb-5">
+        <h4 class="text-danger">Dessert</h4>
+        <ul class="list-group mb-2">
+            {% for piatto in dessert %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ piatto.nome }}</span>
+                <span>
+                    € {{ piatto.prezzo|floatformat:2 }}
+                    <!-- Form per eliminare il piatto -->
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="delete_piatto" value="{{ piatto.id_piatto }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Elimina">×</button>
+                </form>
+            </span>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">Nessun dessert inserito.</li>
+            {% endfor %}
+        </ul>
+        <!-- Form aggiunta dessert -->
+        <form method="post" class="form-inline">
+            {% csrf_token %}
+            <input type="hidden" name="add_piatto" value="1">
+            <input type="hidden" name="tipo_piatto" value="dessert">
+            <input type="text" name="nome" class="form-control mr-2 mb-2" placeholder="Nome dessert" required>
+            <input type="number" step="0.01" min="0" name="prezzo" class="form-control mr-2 mb-2" placeholder="Prezzo (€)" required>
+            <button type="submit" class="btn btn-danger mb-2">Aggiungi Dessert</button>
+        </form>
+    </div>
+</div>
+<button type="submit" class="btn btn-secondary mt-4" onclick="window.location.href='/home'">Torna alla Home</button>
+{% endblock %}
+</body>
+</html>

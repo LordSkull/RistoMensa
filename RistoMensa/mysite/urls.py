@@ -23,5 +23,8 @@ urlpatterns = [
     path('login', login, name='login'),
     path('prenotazione', effettua_prenotazione, name='prenotazione'),
     path('area_dipendente', annulla, name='annulla'),
+    path('next', conferma_prenotazione, name='conferma_prenotazione'),
+    path('gestione_menu/', gestione_menu, name='gestione_menu'),
+    path('home/', index, name='home'),
 ]
 
