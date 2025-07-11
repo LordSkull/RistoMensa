@@ -74,3 +74,51 @@ In PowerShell
 ```bash
 pip install -r requirements.txt
 ```
+
+## **Configurazione del Database**
+1. **Importare il database da dump SQL***
+Se disponi di un file `.sql` con il dump del database puoi importarlo nel tuo server MySQL/MariaDB.
+
+Metodo 1: via phpMyAdmin
+- Accedi a phpMyAdmin
+- Crea un nuovo database 
+- Clicca su Importa e carica il file dump.sql
+
+2. **Configurazione Database su Django**
+All’interno del file settings.py del progetto Django, è necessario configurare correttamente la connessione al database MySQL/MariaDB. I parametri da inserire sono:
+```
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'nome_database',
+        'USER': 'nome_utente',
+        'PASSWORD': ‘ ’,
+        'HOST': 'localhost',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+         }
+    }
+}
+```
+
+---
+
+## **Utilizzo**
+Dopo la configurazione, eseguire i seguenti comandi da terminale per applicare le migrazioni:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+Una volta completato, si può avviare il server locale con:
+```bash
+python manage.py runserver
+```
+L'applicazione sarà accessibile all'indirizzo: http://localhost:8000.
+
+**NOTA** 
+Per il login da responsabile mensa la password è sempre admin, mentre per il dipendete aziendale è utente. Nel database sono salvate direttamente hashate in MD5
+
+## **Licenza**
+Questo progetto è stato realizzato e distribuito a scopo didattico con licenza [MIT](LICENSE).
+Puoi usarlo, modificarlo e distribuirlo liberamente, a patto che venga mantenuta la nota di copyright.

@@ -17,16 +17,16 @@ class Azienda(models.Model):
 
 class Amministratore(models.Model):
     id_amministratore = models.IntegerField(primary_key=True)
-    email = models.EmailField(max_length=30, unique=True)
+    email = models.EmailField(max_length=100, unique=True)
     password = models.TextField(max_length=32)
     id_azienda = models.ForeignKey(Azienda, on_delete=models.CASCADE, related_name='amministratore')
 
 
 class Dipendente(models.Model):
     id_dipendente = models.IntegerField(primary_key=True)
-    nome = models.CharField(max_length=30)
-    cognome = models.CharField(max_length=30)
-    email = models.EmailField(max_length=30, unique=True)
+    nome = models.CharField(max_length=50)
+    cognome = models.CharField(max_length=50)
+    email = models.EmailField(max_length=100, unique=True)
     password = models.CharField(max_length=32)
     id_azienda = models.ForeignKey(Azienda, on_delete=models.CASCADE, related_name='dipendente')
 

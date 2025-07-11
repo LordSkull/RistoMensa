@@ -138,24 +138,31 @@ def area_dipendente(request):
 
 def effettua_prenotazione(request):
     
-    # Recupero dalla sessione l’ID della struttura
+    # Recupera l'ID della struttura associata all'utente autenticato dalla sessione
     struct_id = request.session.get('id_struttura')
+    
+    # Se l'utente non ha una struttura associata (non autenticato), reindirizzo al login
     if not struct_id:
         return redirect('login')
 
+
+    # Recupera la data selezionata per la prenotazione (se presente) dai parametri GET
     data = request.GET.get('data')
 
     fasce_orarie = Prenotazione.FASCE_ORARIE
 
+    # Salva la data odierna in formato stringa (es. '2025-06-25')
     today = date.today().strftime('%Y-%m-%d')
 
+    # Recupera tutti i tavoli disponibili per la struttura dell’utente
     tavoli_disponibili = Tavolo.objects.filter(struttura_associata=struct_id, disponibilità=True).order_by('id_tavolo')
 
+    # Se è stata selezionata una data, esclude i tavoli già prenotati per quel giorno
     if data:
         tavoli_prenotati = Prenotazione.objects.filter(data_prenotazione=data).values_list('id_tavolo', flat=True)
         tavoli_disponibili = tavoli_disponibili.exclude(id_tavolo__in=tavoli_prenotati)
    
-    print("Tavoli disponibili per la struttura:", list(Tavolo.objects.filter(struttura_associata=struct_id).values_list('id_tavolo', flat=True)))
+    
     
 
     # prendo i piatti associati al responsabile di quella stessa struttura
@@ -169,7 +176,7 @@ def effettua_prenotazione(request):
     bevande = piatti.filter(tipo_piatto=Piatto.Tipologia_piatto.BEVANDA)
 
     
-    # altrimenti mostriamo un po' il form
+    # Mostra la pagina di prenotazione con i dati dinamici:
     return render(request, 'prenotazione.html', {
         'tavoli':   tavoli_disponibili,
         'primi':    primi,
@@ -187,37 +194,48 @@ def effettua_prenotazione(request):
 
 
 def conferma_prenotazione(request):
+    # Mostro il riepilogo della prenotazione prima della conferma definitiva da parte dell'utente.
     if request.method == 'POST' and 'confirm' not in request.POST:
-        # mostro il riepilogo
-        # mi prendo la data
+      
+        # Mi prendo i dati fondamentali dalla richiuesta POST
         
         data = request.POST.get('data')
         fascia_oraria = request.POST.get('fascia_oraria')
         id_tavolo = request.POST.get('tavolo')
 
-        primi_selezionati = request.POST.getlist('primi')
-        primi_scelti = []
-        totale_primi = 0
+        # ------------------ PRRIMI PIATTI -----------------
+        # Costruisco la lista dei primi piatti selezionat
+        primi_selezionati = request.POST.getlist('primi') # Lista degli id dei primi scelti
+        primi_scelti = []   # Lista che conterrà: piatto, quantità, tempo_cottura
+        totale_primi = 0    # Somma dei prezzi dei primi
         for id_piatto in primi_selezionati:
             primo = get_object_or_404(Piatto, id_piatto=id_piatto)
+            # Recupero la quantità selezionata per questo piatto (default 1)
             qty = int(request.POST.get(f'primi_qty_{id_piatto}', 1))
+            # Recupero il tempo di cottura selezionato per questo piatto 
             tempo_cottura = request.POST.get(f'primo_cottura_{id_piatto}', '')
+            # Se la quantità è almeno 1, aggiungo il piatto e aggiorno il totale
             if qty > 0:
                 primi_scelti.append({'piatto': primo, 'quantita': qty, 'tempo_cottura': tempo_cottura})
                 totale_primi += primo.prezzo * qty
             
 
+        # ------------------ SECONDI PIATTI -----------------
+        # Costruisco la lista dei secondi piatti selezionati
         secondi_selezionati = request.POST.getlist('secondi')
         secondi_scelti = []
         totale_secondi = 0
         for id_piatto in secondi_selezionati:
             secondo = get_object_or_404(Piatto, id_piatto=id_piatto)
             qty = int(request.POST.get(f'secondi_qty_{id_piatto}', 1))
+            # Recupero il contorno selezionato per questo secondo (es: patate/insalata)
             contorno = request.POST.get(f'secondo_contorno_{id_piatto}', '')
             if qty > 0:
                 secondi_scelti.append({'piatto': secondo, 'quantita': qty, 'contorno': contorno})
                 totale_secondi += secondo.prezzo * qty
         
+        # ------------------- FRUTTA ------------------------
+        # Gestione della frutta selezionata (analogo a sopra, ma senza campo aggiuntivo)
         frutta_selezionati = request.POST.getlist('frutta')
         frutta_scelti = []
         totale_frutta = 0
@@ -228,6 +246,9 @@ def conferma_prenotazione(request):
                 frutta_scelti.append({'piatto': frutta, 'quantita': qty})
                 totale_frutta += frutta.prezzo * qty
 
+
+        # ------------------- DESSERT -----------------------
+        # Gestione dei dessert selezionati 
         dessert_selezionati = request.POST.getlist('dessert')
         dessert_scelti = []
         totale_dessert = 0
@@ -238,6 +259,9 @@ def conferma_prenotazione(request):
                 dessert_scelti.append({'piatto': dessert, 'quantita': qty})
                 totale_dessert += dessert.prezzo * qty
 
+
+        # ------------------- BEVANDE -----------------------
+        # Gestione delle bevande selezionate
         bevande_selezionate = request.POST.getlist('bevande')
         bevande_scelte = []
         totale_bevande = 0
@@ -250,13 +274,11 @@ def conferma_prenotazione(request):
                 
         
        
-        print("POST DATA:", request.POST)
         tavolo = get_object_or_404(Tavolo, id_tavolo=id_tavolo)
        
         totale_prezzo = 0
         totale_prezzo = totale_primi + totale_secondi + totale_frutta + totale_dessert + totale_bevande
 
-        print("POST DATA:", request.POST)
        
         # Passa nel conferma_prenotazione.html
         return render(request, 'conferma_prenotazione.html', {
@@ -279,27 +301,33 @@ def conferma_prenotazione(request):
 
         id_tavolo = request.POST.get('tavolo')
     
+        # ------------------ PRRIMI PIATTI -----------------
+        #  # Stessa logica di raccolta dei piatti già vista sopra
         primi_selezionati = request.POST.getlist('primi')
         primi_lista = []
         totale_primi = 0
         for id_piatto in primi_selezionati:
             primo = get_object_or_404(Piatto, id_piatto=id_piatto)
             qty = int(request.POST.get(f'primi_qty_{id_piatto}', 1))
+            tempo_cottura = request.POST.get(f'primo_cottura_{id_piatto}', '')
             if qty > 0:
-                primi_lista.append({'piatto': primo, 'quantita': qty})
+                primi_lista.append({'piatto': primo, 'quantita': qty, 'tempo_cottura': tempo_cottura })
                 totale_primi += primo.prezzo * qty
               
         
+         # ------------------ SECONDI PIATTI -----------------
         secondi_selezionati = request.POST.getlist('secondi')
         secondi_scelti = []
         totale_secondi = 0
         for id_piatto in secondi_selezionati:
             secondo = get_object_or_404(Piatto, id_piatto=id_piatto)
             qty = int(request.POST.get(f'secondi_qty_{id_piatto}', 1))
+            contorno = request.POST.get(f'secondo_contorno_{id_piatto}', '')
             if qty > 0:
-                secondi_scelti.append({'piatto': secondo, 'quantita': qty})
+                secondi_scelti.append({'piatto': secondo, 'quantita': qty, 'contorno': contorno})
                 totale_secondi += secondo.prezzo * qty
-        
+
+        # ------------------- FRUTTA ------------------------  
         frutta_selezionati = request.POST.getlist('frutta')
         frutta_scelti = []
         totale_frutta = 0
@@ -310,7 +338,7 @@ def conferma_prenotazione(request):
                 frutta_scelti.append({'piatto': frutta, 'quantita': qty})
                 totale_frutta += frutta.prezzo * qty
 
-
+        # ------------------- DESSERT -----------------------
         dessert_selezionati = request.POST.getlist('dessert')
         dessert_scelti = []
         totale_dessert = 0
@@ -321,7 +349,7 @@ def conferma_prenotazione(request):
                 dessert_scelti.append({'piatto': dessert, 'quantita': qty})
                 totale_dessert += dessert.prezzo * qty
 
-
+        # ------------------- BEVANDE -----------------------
         bevande_selezionate = request.POST.getlist('bevande')
         bevande_scelte = []
         totale_bevande = 0
@@ -333,7 +361,7 @@ def conferma_prenotazione(request):
                 totale_bevande += bevande.prezzo * qty
                 print("totale bevande:", totale_bevande)
 
-        print("POST DATA:", request.POST)
+       
         tavolo = get_object_or_404(Tavolo, id_tavolo=id_tavolo)
        
         totale_prezzo = 0
