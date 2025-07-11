@@ -9,7 +9,6 @@ import hashlib
 def index(request):
     return render(request, 'home.html')
 
-
 # Funzione che gestisce il login degli utenti
 def login(request):
     if request.method == 'POST':
