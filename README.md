@@ -1,6 +1,6 @@
 # **Sistema Informativo – Gestione Mense Aziendali “RistoMensa”**
 Il progetto RistoMensa nasce con l’obiettivo di digitalizzare e semplificare la gestione delle mense aziendali tramite un’applicazione web moderna.
-L’applicativo consente a dipendenti e gestori di accedere a funzionalità differenziate per la gestione delle prenotazioni dei pasti, dei menù settimanali e delle strutture aziendali, sostituendo i vecchi processi cartacei con una soluzione più sicura, efficiente e accessibile.
+L’applicativo consente a dipendenti e gestori di accedere a funzionalità differenziate per la gestione delle prenotazioni dei pasti, dei menu giornalieri e delle strutture aziendali, sostituendo i vecchi processi cartacei con una soluzione più sicura, efficiente e accessibile.
 
 ---
 
