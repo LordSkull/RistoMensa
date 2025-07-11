@@ -15,6 +15,20 @@
   </style>
 </head>
 <body>
+
+<!-- Sezione messages Error-->
+<div class="container mt-3">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="text-danger">Prenotazione Mensa</h1>
@@ -27,22 +41,36 @@
     <form method="post" action ="/next" class="p-4 bg-dark rounded">
         {% csrf_token %}
 
-        <!-- Data -->
+         <!-- Data -->
         <div class="mb-4">
           <label class="form-label">Data:</label>
-          <input type="date" name="data"
+          <input type="date" name="data" min="{{ today }}"
                 class="form-control bg-secondary text-light border-0"
                         value="{% if selected.data %}{{ selected.data }}{% else %}{{ today }}{% endif %}">
         </div>
+      
+        <!-- Fascia Oraria -->
+        <div class="mb-3">
+          <label for="fascia_oraria" class="form-label">Fascia oraria</label>
+          <select id="fascia_oraria" name="fascia_oraria" class="form-select" required>
+              <option value="">Seleziona fascia oraria</option>
+              {% for orario in fasce_orarie %}
+                  <option value="{{ orario.0 }}">{{ orario.1 }}</option>
+              {% endfor %}
+          </select>
+        </div>
 
-        <!-- Selezione Tavolo -->
+
+
+
+      <!-- Selezione Tavolo -->
     <div class="mb-4">
       <label class="form-label">Seleziona un tavolo:</label>
         <div class="d-flex flex-wrap">
           {% for tavolo in tavoli %}
             {% if not tavolo.disponibilità %}
               <button type="button" class="btn btn-outline-secondary m-1" disabled>
-                Tavolo {{ tavolo.id_tavolo }}
+                Tavolo: {{ tavolo.id_tavolo }}
               </button>
             {% else %}
               <input 
@@ -53,66 +81,163 @@
                 value="{{ tavolo.id_tavolo }}"
                 autocomplete="off"
                 {% if selected and selected.tavolo == tavolo.id_tavolo|stringformat:"s" %}checked{% endif %}
-              >
+                required>
               <label 
-                class="btn m-1 {% if selected and selected.tavolo == tavolo.id_tavolo|stringformat:'s' %}btn-danger{% else %}btn-outline-light{% endif %}"
-                for="tavolo{{ tavolo.id_tavolo }}"
-              >
-                Tavolo {{ tavolo.id_tavolo }}
-              </label>
+              class="btn m-1 {% if selected and selected.tavolo == tavolo.id_tavolo|stringformat:'s' %}btn-danger{% else %}btn-outline-light{% endif %}"
+              for="tavolo{{ tavolo.id_tavolo }}">
+              Tavolo {{ tavolo.id_tavolo }}<br>
+              <small class="text-info">Posti disponibili: {{ tavolo.numero_posti_disponibili }}</small>
+            </label>
             {% endif %}
           {% endfor %}
       </div>
   </div>
 
       <!-- Primo Piatto -->
-      <h5 class="text-danger mt-4">Primo Piatto</h5>
-      <div class="list-group">
-      {% for piatto in primi %}
-          <label class="list-group-item bg-secondary text-light">
-          <input class="form-check-input me-2"
-                  type="radio"
-                  name="primo"
-                  value="{{ piatto.id_piatto }}"
-                  {% if selected.primo == piatto.nome %}checked{% endif %}>
-          {{ piatto.nome }}{% if piatto.prezzo > 0 %} – €{{ piatto.prezzo|floatformat:2 }}{% endif %}
-          </label>
-      {% endfor %}
-      </div>
+  <h5 class="text-danger mt-4">Primo Piatto</h5>
+  <div class="list-group">
+  {% for piatto in primi %}
+    <div class="d-flex align-items-center list-group-item bg-secondary text-light">
+      <input class="form-check-input me-2"
+            type="checkbox"
+            name="primi"
+            value="{{ piatto.id_piatto }}"
+            id="primo-{{ piatto.id_piatto }}">
+      <label for="primo-{{ piatto.id_piatto }}" class="mb-0 flex-grow-1">
+        {{ piatto.nome }}{% if piatto.prezzo > 0 %} – €{{ piatto.prezzo|floatformat:2 }}{% endif %}
+      </label>
+      <input type="number"
+            class="form-control ms-2"
+            name="primi_qty_{{ piatto.id_piatto }}"
+            min="1"
+            max="20"
+            value="1"
+            style="width: 80px;">
+            <select class="form-select ms-2"
+                name="primo_cottura_{{ piatto.id_piatto }}"
+                style="width: 120px;">
+              <option value="">Tempo cottura</option>
+              {% for value, label in tempo_cottura %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+        </select>
+    </div>
+  {% endfor %}
+</div>
+
 
       <!-- Secondo Piatto -->
       <h5 class="text-danger mt-4">Secondo Piatto</h5>
       <div class="list-group">
       {% for piatto in secondi %}
-          <label class="list-group-item bg-secondary text-light">
+        <div class="d-flex align-items-center list-group-item bg-secondary text-light">
           <input class="form-check-input me-2"
-                  type="radio"
-                  name="secondo"
+                  type="checkbox"
+                  name="secondi"
                   value="{{ piatto.id_piatto }}"
-                  {% if selected.secondo == piatto.nome %}checked{% endif %}>
-          {{ piatto.nome }}{% if piatto.prezzo > 0 %} – €{{ piatto.prezzo|floatformat:2 }}{% endif %}
+                  id="secondo--{{ piatto.id_piatto }}">
+                <label for="secondo--{{ piatto.id_piatto }}" class="mb-0 flex-grow-1">
+                  {{ piatto.nome }}{% if piatto.prezzo > 0 %} – €{{ piatto.prezzo|floatformat:2 }}{% endif %}
           </label>
+          <input type="number"
+            class="form-control ms-2"
+            name="secondi_qty_{{ piatto.id_piatto }}"
+            min="1"
+            max="20"
+            value="1"
+            style="width: 80px;">
+             <select class="form-select ms-2"
+                name="primo_cottura_{{ piatto.id_piatto }}"
+                style="width: 120px;">
+              <option value="">Contorno</option>
+              {% for value, label in contorno %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+        </select>
+    </div>
       {% endfor %}
-      </div>
+</div>
 
-      <!-- Dessert -->
-      <h5 class="text-danger mt-4">Dessert</h5>
-      <div class="list-group">
-      {% for piatto in dessert %}
-          <label class="list-group-item bg-secondary text-light">
-          <input class="form-check-input me-2"
-                  type="radio"
-                  name="dessert"
-                  value="{{ piatto.id_piatto }}"
-                  {% if selected.dessert == piatto.nome %}checked{% endif %}>
-          {{ piatto.nome }}{% if piatto.prezzo > 0 %} – €{{ piatto.prezzo|floatformat:2 }}{% endif %}
-          </label>
-      {% endfor %}
-      </div>
+
+    <!-- Frutta -->
+  <h5 class="text-danger mt-4">Frutta</h5>
+  <div class="list-group">
+  {% for piatto in frutta %}
+    <div class="d-flex align-items-center list-group-item bg-secondary text-light">
+      <input class="form-check-input me-2"
+            type="checkbox"
+            name="frutta"
+            value="{{ piatto.id_piatto }}"
+            id="frutta-{{ piatto.id_piatto }}">
+      <label for="frutta-{{ piatto.id_piatto }}" class="mb-0 flex-grow-1">
+        {{ piatto.nome }}{% if piatto.prezzo > 0 %} – €{{ piatto.prezzo|floatformat:2 }}{% endif %}
+      </label>
+      <input type="number"
+            class="form-control ms-2"
+            name="frutta_qty_{{ piatto.id_piatto }}"
+            min="1"
+            max="20"
+            value="1"
+            style="width: 80px;">
+    </div>
+  {% endfor %}
+</div>
+
+
+       <!-- Dessert -->
+  <h5 class="text-danger mt-4">Dessert</h5>
+  <div class="list-group">
+  {% for piatto in dessert %}
+    <div class="d-flex align-items-center list-group-item bg-secondary text-light">
+      <input class="form-check-input me-2"
+            type="checkbox"
+            name="dessert"
+            value="{{ piatto.id_piatto }}"
+            id="dessert-{{ piatto.id_piatto }}">
+      <label for="dessert-{{ piatto.id_piatto }}" class="mb-0 flex-grow-1">
+        {{ piatto.nome }}{% if piatto.prezzo > 0 %} – €{{ piatto.prezzo|floatformat:2 }}{% endif %}
+      </label>
+      <input type="number"
+            class="form-control ms-2"
+            name="dessert_qty_{{ piatto.id_piatto }}"
+            min="1"
+            max="20"
+            value="1"
+            style="width: 80px;">
+    </div>
+  {% endfor %}
+</div>
+
+
+         <!-- Bevande -->
+  <h5 class="text-danger mt-4">Bevande</h5>
+  <div class="list-group">
+  {% for piatto in bevande %}
+    <div class="d-flex align-items-center list-group-item bg-secondary text-light">
+      <input class="form-check-input me-2"
+            type="checkbox"
+            name="bevande"
+            value="{{ piatto.id_piatto }}"
+            id="bevande-{{ piatto.id_piatto }}">
+      <label for="bevande-{{ piatto.id_piatto }}" class="mb-0 flex-grow-1">
+        {{ piatto.nome }}{% if piatto.prezzo > 0 %} – €{{ piatto.prezzo|floatformat:2 }}{% endif %}
+      </label>
+      <input type="number"
+            class="form-control ms-2"
+            name="bevande_qty_{{ piatto.id_piatto }}"
+            min="1"
+            max="20"
+            value="1"
+            style="width: 80px;">
+    </div>
+  {% endfor %}
+</div>
+
+      
 
         <!-- Submit -->
         <div class="d-grid mt-4">
-          <button type="submit" class="btn btn-danger"  onclick="window.location.href='/prenotazione'">Conferma Prenotazione</button>
+          <button type="submit" class="btn btn-danger">Prosegui</button>
         </div>
     </form>
   </div>

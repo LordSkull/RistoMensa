@@ -115,6 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SESSION_COOKIE_AGE = 600  # 60 secondi = 1 minuti, questo è il tempo di scadenza della sessione Globale
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

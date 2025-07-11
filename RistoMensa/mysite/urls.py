@@ -27,5 +27,7 @@ urlpatterns = [
     path('gestione_menu/', gestione_menu, name='gestione_menu'),
     path('elimina_prenotazione/<int:id>/', elimina_prenotazione, name='elimina_prenotazione'),
     path('home/', index, name='home'),
+    path('reset_tavoli/', reset_tavoli_struttura, name='reset_tavoli_struttura'),
+    path('reset_tavolo/<int:id_tavolo>/', reset_tavolo_singolo, name='reset_tavolo'),
 ]
 

@@ -103,6 +103,7 @@
             <thead>
                 <tr>
                     <th>Data</th>
+                    <th>Fascia Oraria</th>
                     <th>Tavolo</th>
                     <th>Totale</th>
                     <th>Stato</th>
@@ -113,6 +114,7 @@
                 {% for pren in prenotazioni %}
                 <tr>
                     <td>{{ pren.data_prenotazione|date:"d/m/Y" }}</td>
+                    <td>{{ pren.fascia_oraria }}</td>
                     <td>Tavolo {{ pren.id_tavolo.id_tavolo }}</td>
                     <td>€{{ pren.totale_prezzo|floatformat:2 }}</td>
                     <td>
@@ -137,7 +139,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center text-muted">Nessuna prenotazione trovata.</td>
+                    <td colspan="6" class="text-center text-muted">Nessuna prenotazione trovata.</td>
                 </tr>
                 {% endfor %}
             </tbody>

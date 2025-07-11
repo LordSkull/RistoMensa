@@ -15,7 +15,7 @@ class Azienda(models.Model):
     indirizzo = models.TextField(max_length=100)
     id_struttura = models.ForeignKey(Struttura, on_delete=models.CASCADE, related_name='azienda')
 
-class Amministatore(models.Model):
+class Amministratore(models.Model):
     id_amministratore = models.IntegerField(primary_key=True)
     email = models.EmailField(max_length=30, unique=True)
     password = models.TextField(max_length=32)
@@ -42,12 +42,41 @@ class Piatto(models.Model):
     descrizione = models.CharField(max_length=255, null=True)
     prezzo = models.DecimalField(max_digits=10, decimal_places=2)
     
+    class Tempo_cottura(models.TextChoices):
+        BREVE = 'breve',
+        MEDIO = 'medio',
+        LUNGO = 'lungo',
+
+
     class Tipologia_piatto(models.TextChoices):
         PRIMO = 'primo piatto',
         SECONDO = 'secondo piatto',
+        FRUTTA = 'frutta',
         DESSERT = 'dessert',
+        BEVANDA = 'bevande',
     
+    class Tipologia_contorno(models.TextChoices):
+        PATATE = 'patate al forno',
+        VERDURE = 'verdure grigliate',
+        INSALATA = 'insalata mista',
+
+    class Tipologia_origine_frutta(models.TextChoices):
+        LOCALE = 'locale',
+        ESTERA = 'esterna',
+        BIOLOGICA = 'biologica',
+        CONVENZIONALE = 'convenzionale',
+    
+    class Tipologia_dessert(models.TextChoices):
+        GELATO = 'gelato',
+        TORTA = 'torta',
+        BUDINO = 'budino',
+        SEMIFREDDO = 'semifreddo',
+    tipo_cottura = EnumField(choices=Tempo_cottura.choices, null=True) 
     tipo_piatto = EnumField(choices=Tipologia_piatto.choices)
+    contorno = EnumField(choices=Tipologia_contorno.choices, null=True)
+    origine_frutta = EnumField(choices=Tipologia_origine_frutta.choices, null=True)
+    tipo_dessert = EnumField(choices=Tipologia_dessert.choices, null=True)
+    alcolica = models.BooleanField(default=False)
     id_responsabile = models.ForeignKey(Responsabile, on_delete=models.CASCADE, related_name='piatto')
 
 
@@ -59,8 +88,18 @@ class Tavolo(models.Model):
 
 class Prenotazione(models.Model):
     id_prenotazione = models.AutoField(primary_key=True)
-    data_prenotazione = models.DateTimeField()
-   # descrizione_ordine = models.TextField(max_length=255, null=True, blank=True)
+    data_prenotazione = models.DateField()
+
+    FASCE_ORARIE = [
+        ('12:00-12:30', '12:00-12:30'),
+        ('12:30-13:00', '12:30-13:00'),
+        ('13:00-13:30', '13:00-13:30'),
+        ('13:30-14:00', '13:30-14:00'),
+        ('14:00-14:30', '14:00-14:30'),
+        ('14:30-15:00', '14:30-15:00'),
+    ]
+    fascia_oraria = models.CharField(max_length=20, choices=FASCE_ORARIE)
+
     class StatoPrenotazione(models.TextChoices):
         IN_ATTESA = 'in attesa',
         ANNULLATA = 'annullata',
@@ -72,7 +111,13 @@ class Prenotazione(models.Model):
     id_tavolo = models.ForeignKey(Tavolo, on_delete=models.CASCADE, related_name='prenotazione')
     id_dipendente = models.ForeignKey(Dipendente, on_delete=models.CASCADE, related_name='prenotazione')
 
+    # mi serve per la quantità della roba
+    piatti = models.ManyToManyField('Piatto', through='Associazione')
 
 class Associazione(models.Model):
-    id_tavolo = models.ForeignKey(Tavolo, on_delete=models.CASCADE, related_name='associazione')
-    id_piatto = models.ForeignKey(Piatto, on_delete=models.CASCADE, related_name='associazione')
+    prenotazione = models.ForeignKey('Prenotazione', on_delete=models.CASCADE)
+    piatto = models.ForeignKey('Piatto', on_delete=models.CASCADE)
+    quantita = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.quantita} x {self.piatto.nome} (Prenotazione {self.prenotazione.id_prenotazione})"

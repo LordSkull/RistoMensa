@@ -15,6 +15,22 @@
   </style>
 </head>
 <body>
+
+<!-- Sezione messages Error-->
+<div class="container mt-3">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+
+
+
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="text-danger">Prenotazione Mensa</h1>
@@ -26,28 +42,94 @@
 
     <form method="post" class="p-4 bg-dark rounded">
       {% csrf_token %}
-      <!-- Data -->
+      <!-- Dati -->
         <input type="hidden" name="tavolo" value="{{ tavolo.id_tavolo }}">
         <input type="hidden" name="data" value="{{ data }}">
-        <input type="hidden" name="primo" value="{{ primo_scelto.id_piatto }}">
-        <input type="hidden" name="secondo" value="{{ secondo_scelto.id_piatto }}">
-        <input type="hidden" name="dessert" value="{{ dessert_scelto.id_piatto }}">
+        
+        {% for item in primi_scelti %}
+        <input type="hidden" name="primi" value="{{ item.piatto.id_piatto }}">
+        <input type="hidden" name="primi_qty_{{ item.piatto.id_piatto }}" value="{{ item.quantita }}">
+        {% endfor %}
 
+        {% for item in secondi_scelti %}
+        <input type="hidden" name="secondi" value="{{ item.piatto.id_piatto }}">
+        <input type="hidden" name="secondi_qty_{{ item.piatto.id_piatto }}" value="{{ item.quantita }}">
+        {% endfor %}
+
+         {% for item in frutta_scelta %}
+        <input type="hidden" name="frutta" value="{{ item.piatto.id_piatto }}">
+        <input type="hidden" name="frutta_qty_{{ item.piatto.id_piatto }}" value="{{ item.quantita }}">
+        {% endfor %}
+
+        
+         {% for item in dessert_scelto %}
+        <input type="hidden" name="dessert" value="{{ item.piatto.id_piatto }}">
+        <input type="hidden" name="dessert_qty_{{ item.piatto.id_piatto }}" value="{{ item.quantita }}">
+        {% endfor %}
+
+        
+         {% for item in bevanda_scelta %}
+        <input type="hidden" name="bevande" value="{{ item.piatto.id_piatto }}">
+        <input type="hidden" name="bevande_qty_{{ item.piatto.id_piatto }}" value="{{ item.quantita }}">
+        {% endfor %}
+       
+    
+        <input type="hidden" name="fascia_oraria" value="{{ fascia_oraria  }}">
+        <input type="hidden" name="confirm" value="1">
 
       <!-- Riepilogo -->
       
         <div class="mt-4 p-3 bg-dark border rounded">
           <h5>Riepilogo:</h5>
           <p>Data: {{   data    }}<br>
-             Tavolo: Tavolo {{ tavolo.id_tavolo }}</p>
+             Tavolo: Tavolo {{ tavolo.id_tavolo }} con {{ tavolo.numero_posti_disponibili }} Posti Disponibili</p>
           <ul>
-            <li>Primo: {{ primo_scelto.nome }}</li>
-            <li>Secondo: {{ secondo_scelto.nome }}</li>
-            <li>Dessert: {{ dessert_scelto.nome }}</li>
+            <li>Primi:
+              <ul> 
+              {% for item in primi_scelti %}
+              <li>{{ item.piatto.nome}} x{{ item.quantita}}
+              {% if item.tempo_cottura %}
+                <br><small><em>Tempo cottura:</em> {{ item.tempo_cottura }}</small>
+                  {% endif %}
+                </li>
+              {% endfor %}
+              </ul>
+            </li>
+
+             <li>Secondi:
+              <ul> 
+              {% for item in secondi_scelti %}
+              <li>{{ item.piatto.nome}} x{{ item.quantita}}
+              {% if item.contorno %}
+                    <br><small><em>Contorno:</em> {{ item.contorno }}</small>
+                  {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+            
+             <li>Frutta:<ul> 
+              {% for item in frutta_scelta %}
+              <li>{{ item.piatto.nome}} x{{ item.quantita}}</li> 
+              {% endfor %}</ul>
+            </li>
+            
+            <li>Dessert:<ul> 
+              {% for item in dessert_scelto %}
+              <li>{{ item.piatto.nome}} x{{ item.quantita}}</li> 
+              {% endfor %}</ul>
+
+              
+            <li>Bevande:<ul> 
+              {% for item in bevanda_scelta %}
+              <li>{{ item.piatto.nome}} x{{ item.quantita}}</li> 
+              {% endfor %}</ul>
+            
           </ul>
           <p><strong>Totale: €{{ totale|floatformat:2 }}</strong></p>
         </div>
-    
+        <b>N.B tutte le persone di questo tavolo riceveranno lo stesso menù, in caso si vogliano fare delle modifiche, si prega di dirlo al personale della mensa presente al momento.</b>
+
 
       <!-- Submit -->
       <div class="d-grid mt-4">
